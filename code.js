@@ -12,6 +12,7 @@ function ConvertGoogleDocToCleanHtml() {
   }
 
   var html = output.join('\r');
+  //console.log(html);
   emailHtml(html, images);
   //createDocumentForHtml(html, images);
 }
@@ -35,7 +36,7 @@ function emailHtml(html, images) {
   MailApp.sendEmail({
      to: Session.getActiveUser().getEmail(),
      subject: name,
-     htmlBody: html,
+     htmlBody: 'Find attached the HTML content', //
      inlineImages: inlineImages,
      attachments: attachments
    });
@@ -71,9 +72,11 @@ function processItem(item, listCounters, images) {
       case DocumentApp.ParagraphHeading.HEADING4:
         prefix = "<h4>", suffix = "</h4>"; break;
       case DocumentApp.ParagraphHeading.HEADING3:
-        prefix = "<h3>", suffix = "</h3>"; break;
+        // prefix = "<h3>", suffix = "</h3>"; break;
+        prefix = "<h4>", suffix = "</h4>"; break; // lambo override
       case DocumentApp.ParagraphHeading.HEADING2:
-        prefix = "<h2>", suffix = "</h2>"; break;
+//        prefix = "<h2>", suffix = "</h2>"; break;
+        prefix = "<h3>", suffix = "</h3>"; break; // lambo override
       case DocumentApp.ParagraphHeading.HEADING1:
         prefix = "<h1>", suffix = "</h1>"; break;
       default: 
@@ -99,10 +102,8 @@ function processItem(item, listCounters, images) {
       if (gt === DocumentApp.GlyphType.BULLET
           || gt === DocumentApp.GlyphType.HOLLOW_BULLET
           || gt === DocumentApp.GlyphType.SQUARE_BULLET) {
-        prefix = '<ul class="small"><li>', suffix = "</li>";
-
-          suffix += "</ul>";
-        }
+        prefix = '<ul><li>', suffix = "</li>";
+      }
       else {
         // Ordered list (<ol>):
         prefix = "<ol><li>", suffix = "</li>";
@@ -113,7 +114,7 @@ function processItem(item, listCounters, images) {
       suffix = "</li>";
     }
 
-    if (item.isAtDocumentEnd() || item.getNextSibling().getType() != DocumentApp.ElementType.LIST_ITEM) {
+    if (item.isAtDocumentEnd() || (item.getNextSibling() && (item.getNextSibling().getType() != DocumentApp.ElementType.LIST_ITEM))) {
       if (gt === DocumentApp.GlyphType.BULLET
           || gt === DocumentApp.GlyphType.HOLLOW_BULLET
           || gt === DocumentApp.GlyphType.SQUARE_BULLET) {
@@ -162,16 +163,16 @@ function processText(item, output) {
   if (indices.length <= 1) {
     // Assuming that a whole para fully italic is a quote
     if(item.isBold()) {
-      output.push('<b>' + text + '</b>');
+      output.push('<strong>' + text + '</strong>');
     }
     else if(item.isItalic()) {
       output.push('<blockquote>' + text + '</blockquote>');
     }
     else if (text.trim().indexOf('http://') == 0) {
-      output.push('<a href="' + text + '" rel="nofollow">' + text + '</a>');
+      output.push('<a href="' + text + '" rel="nofollow" target="_blank">' + text + '</a>');
     }
     else {
-      output.push(text);
+      output.push(text.replace(/(?:\r\n|\r|\n)/g, '<br />\r\n')); // lambo
     }
   }
   else {
@@ -188,7 +189,7 @@ function processText(item, output) {
         output.push('<i>');
       }
       if (partAtts.BOLD) {
-        output.push('<b>');
+        output.push('<strong>');
       }
       if (partAtts.UNDERLINE) {
         output.push('<u>');
@@ -201,17 +202,17 @@ function processText(item, output) {
         output.push('<sup>' + partText + '</sup>');
       }
       else if (partText.trim().indexOf('http://') == 0) {
-        output.push('<a href="' + partText + '" rel="nofollow">' + partText + '</a>');
+        output.push('<a href="' + partText + '" rel="nofollow" target="_blank">' + partText + '</a>');
       }
       else {
-        output.push(partText);
+        output.push(partText.replace(/(?:\r\n|\r|\n)/g, '<br />\r\n')); // lambo
       }
 
       if (partAtts.ITALIC) {
         output.push('</i>');
       }
       if (partAtts.BOLD) {
-        output.push('</b>');
+        output.push('</strong>');
       }
       if (partAtts.UNDERLINE) {
         output.push('</u>');
@@ -242,6 +243,7 @@ function processImage(item, images, output)
   var name = imagePrefix + imageCounter + extension;
   imageCounter++;
   output.push('<img src="cid:'+name+'" />');
+  // TODO: use S3 here? 
   images.push( {
     "blob": blob,
     "type": contentType,
