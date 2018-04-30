@@ -155,6 +155,9 @@ function processItem(item, listCounters, images) {
   return output.join('');
 }
 
+function isLink(text) {
+  return /^http(s?):\/\//.test(text);
+}
 
 function processText(item, output) {
   var text = item.getText();
@@ -168,7 +171,7 @@ function processText(item, output) {
     else if(item.isItalic()) {
       output.push('<blockquote>' + text + '</blockquote>');
     }
-    else if (text.trim().indexOf('http://') == 0) {
+    else if (isLink(text)) {
       output.push('<a href="' + text + '" rel="nofollow" target="_blank">' + text + '</a>');
     }
     else {
@@ -201,7 +204,7 @@ function processText(item, output) {
       if (partText.indexOf('[')==0 && partText[partText.length-1] == ']') {
         output.push('<sup>' + partText + '</sup>');
       }
-      else if (partText.trim().indexOf('http://') == 0) {
+      else if (isLink(partText)) {
         output.push('<a href="' + partText + '" rel="nofollow" target="_blank">' + partText + '</a>');
       }
       else {
