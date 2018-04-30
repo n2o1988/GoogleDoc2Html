@@ -156,7 +156,7 @@ function processItem(item, listCounters, images) {
 }
 
 function isLink(text) {
-  return /^http(s?):\/\//.test(text);
+  return /^http(s?):\/\//.test(text.trim());
 }
 
 function processText(item, output) {
@@ -197,6 +197,9 @@ function processText(item, output) {
       if (partAtts.UNDERLINE) {
         output.push('<u>');
       }
+      if (partAtts.LINK_URL) {
+        output.push('<a href="' + partAtts.LINK_URL + '" target="_blank" rel="nofollow">');
+      }
 
       // If someone has written [xxx] and made this whole text some special font, like superscript
       // then treat it as a reference and make it superscript.
@@ -220,7 +223,9 @@ function processText(item, output) {
       if (partAtts.UNDERLINE) {
         output.push('</u>');
       }
-
+      if (partAtts.LINK_URL) {
+        output.push('</a>');
+      }
     }
   }
 }
