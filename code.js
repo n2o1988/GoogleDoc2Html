@@ -194,7 +194,8 @@ function processText(item, output) {
       if (partAtts.BOLD) {
         output.push('<strong>');
       }
-      if (partAtts.UNDERLINE) {
+      // in HS we don't want links to be underline
+      if (partAtts.UNDERLINE && !partAtts.LINK_URL) {
         output.push('<u>');
       }
       if (partAtts.LINK_URL) {
@@ -220,7 +221,7 @@ function processText(item, output) {
       if (partAtts.BOLD) {
         output.push('</strong>');
       }
-      if (partAtts.UNDERLINE) {
+      if (partAtts.UNDERLINE && !partAtts.LINK_URL) {
         output.push('</u>');
       }
       if (partAtts.LINK_URL) {
@@ -250,8 +251,11 @@ function processImage(item, images, output)
   var imageCounter = images.length;
   var name = imagePrefix + imageCounter + extension;
   imageCounter++;
-  output.push('<img src="cid:'+name+'" />');
-  // TODO: use S3 here? 
+  
+  var altName = item.getAltTitle() || name; 
+  // output.push('<img src="cid:'+name+'" />');
+  output.push('<img src="https://path/to/s3/' + altName + '" />');
+  // TODO: put the right path in here
   images.push( {
     "blob": blob,
     "type": contentType,
